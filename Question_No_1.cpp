@@ -1,3 +1,12 @@
+// Title: MQTT Broker Connection and Message Buffering Simulation
+// Working 
+// Step 1: Initialization process
+// Step 2: Main loop with two concurrent tasks:
+// a) Temperature publishing every 2 seconds
+// b) Broker connection toggle every 10 seconds
+// Step 3: Complete 20-second timeline example showing exact behavior
+// Step 4: Buffer overflow scenario demonstration
+
 #include <iostream>
 #include <queue>
 #include <string>
@@ -142,12 +151,5 @@ int main()
 }
 
 
-// Title: MQTT Broker Connection and Message Buffering Simulation
-// Working 
-// Step 1: Initialization process
-// Step 2: Main loop with two concurrent tasks:
-// a) Temperature publishing every 2 seconds
-// b) Broker connection toggle every 10 seconds
-// Step 3: Complete 20-second timeline example showing exact behavior
-// Step 4: Buffer overflow scenario demonstration
+
 
