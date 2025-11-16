@@ -1,37 +1,116 @@
-# Rohit_Jena_ENLOG-Firmware-Engineer-Test-Assignment_submission
-Assignment Submission
-Question 1:
-MQTT Buffered Publisher (queue + broker)
-step 1 - Init — setup() initializes Serial, sets brokerConnected = false, seeds RNG.
-step 2 - Periodic publish — every 2s loop() generates a random temperature string "Temp:XX" and calls publishMessage().
-step 3 - Buffering — if broker is disconnected the message is pushed to messageBuffer; if buffer full (MAX_BUFFER_SIZE) the oldest message is discarded and logged.
-step 4 - Broker toggle — every 10s the code flips brokerConnected; on reconnect onBrokerReconnect() pops and publishes all buffered messages; on disconnect it logs a warning.
-step 5 - Reliable delivery behavior — while disconnected messages accumulate (bounded); when reconnected buffered messages are flushed in FIFO order and published.
+# Rohit Jena — ENLOG Firmware Engineer Test Assignment  
+### Assignment Submission (All Questions Explained Step-By-Step)
 
-Question 2:
-Ad-hoc JSON Register Parser (string parsing):
+---
 
-step 1 - Helpers — getJsonValue() finds "<key>", locates :, skips whitespace, and extracts either a quoted string or a raw token; trimWspace() removes leading/trailing spaces.
-step 2 - Locate array — parseRegistersFromJson() finds the "registers" key, then the [ ... ] block and extracts its content.
-step 3 - Extract objects — it iterates arrayContent, locating { ... } blocks and for each object calls getJsonValue() to extract addr, name, desc, unit.
-step 4 - Sanitize & store — trims fields, builds RegisterInfo and pushes into the registers vector.
+## **Question 1: MQTT Buffered Publisher**
 
-Output & warnings — main() prints device name, then iterates registers: if addr or name missing it logs a warning and skips; otherwise prints
+### **MQTT Working Steps**
 
-Question 3:
-TcpHeartbeatClient (Winsock TCP PING/PONG) — 5 steps
+**Step 1 — Initialization**  
+- `setup()` initializes Serial communication, seeds the random generator, and sets `brokerConnected = false`.
 
-step 1 - Startup — run() calls initWinsock() which runs WSAStartup; on failure the client stops with error.
-step 2 - Connect loop — main loop checks isConnected(); if not connected it calls connectToServer() which creates a socket, validates IP, and calls connect(). On error it closes socket and retries after 5s.
-step 3 - Send heartbeat — when connected sendHeartbeat() sends "PING" via send(); on send error it returns failure.
-step 4 - Receive response — receiveResponse() sets a 5s recv timeout, calls recv(), handles timeout or closed socket, strips whitespace and checks payload: "PONG" → success; otherwise failure.
-step 5 - Recovery & cleanup — on any send/recv failure disconnect() closes socket and loop will retry; on success the client sleeps 10s before sending next heartbeat; destructor calls disconnect() and WSACleanup().
+**Step 2 — Periodic Publish**  
+- Every 2 seconds, `loop()` generates a random temperature message `"Temp:XX"` and calls `publishMessage()`.
 
-Question 4:
-CalendarEvent (union-based event class) — 5 steps
+**Step 3 — Buffering When Broker Is Down**  
+- If broker is disconnected:  
+  - Message is pushed into `messageBuffer`.  
+  - If buffer is full (`MAX_BUFFER_SIZE`), the oldest message is removed and logged.
 
-step 1 - Data model — CalendarEvent stores date, title[32], EventType and a union EventDetails which holds only one of location[32], minutes_before, or person_name[32].
-step2 - Constructors — three overloaded constructors initialize the common fields (date, title), set type (MEETING/REMINDER/BIRTHDAY) and populate the relevant union member.
-step 3 - Union init — EventDetails() zeroes memory (safe default) so unused union bytes are cleared.
-step 4 - Printing — print_event() switches on type and prints a single formatted line using the correct union field.
-step 5 - Demo — main() creates a Birthday, Meeting, and Reminder and prints.
+**Step 4 — Broker Reconnect/Disconnect Toggle**  
+- Every 10 seconds, connection state toggles.  
+- On reconnect: `onBrokerReconnect()` publishes all buffered messages in FIFO order.  
+- On disconnect: logs a warning.
+
+**Step 5 — Reliable Delivery Behavior**  
+- Messages accumulate safely while disconnected.  
+- As soon as broker reconnects, all buffered messages are flushed and delivered in correct order.
+
+---
+
+## **Question 2: JSON Register Parser (Manual String Parsing)**
+
+### **Parsing Steps**
+
+**Step 1 — Helper Functions**  
+- `getJsonValue()` locates a key, finds the colon, skips whitespace, and extracts values (quoted or raw).  
+- `trimWspace()` removes leading/trailing spaces.
+
+**Step 2 — Find Register Array**  
+- `parseRegistersFromJson()` searches for `"registers"` then extracts the `[ ... ]` content.
+
+**Step 3 — Extract JSON Objects**  
+- Iterates the array to find `{ ... }` blocks.  
+- For each block, extracts `addr`, `name`, `desc`, and `unit`.
+
+**Step 4 — Sanitize & Store**  
+- Trims values and stores them as `RegisterInfo` objects inside a vector.
+
+**Output Behavior**  
+- `main()` prints device name.  
+- For each register:  
+  - Logs warnings for missing `addr` or `name`.  
+  - Otherwise prints valid register info.
+
+---
+
+## **Question 3: TCP Heartbeat Client (Winsock PING/PONG)**
+
+### **Operational Steps**
+
+**Step 1 — Startup**  
+- `run()` calls `initWinsock()` which performs `WSAStartup`.  
+- If initialization fails, execution stops.
+
+**Step 2 — Auto-Reconnect Loop**  
+- If not connected, `connectToServer()` creates a socket, validates IP, and attempts a TCP connect.  
+- On failure, socket is closed and retry happens after 5 seconds.
+
+**Step 3 — Send Heartbeat**  
+- When connected, `"PING"` is sent via `sendHeartbeat()`.
+
+**Step 4 — Receive Response**  
+- `receiveResponse()` uses a 5-second timeout.  
+- If `"PONG"` is received → server is alive.  
+- Any failure (timeout, no data, unexpected response) triggers a disconnect.
+
+**Step 5 — Recovery & Cleanup**  
+- On any error → socket is closed and loop retries.  
+- On success → waits 10 seconds before next heartbeat.  
+- Destructor closes the socket and calls `WSACleanup()`.
+
+---
+
+## **Question 4: CalendarEvent with `union` (C++ OOP + Memory Sharing)**
+
+### **Working Steps**
+
+**Step 1 — Data Model**  
+- Event stores:
+  - date (`day, month, year`)  
+  - `title[32]`  
+  - `EventType`  
+  - `union EventDetails` → stores **one** of:
+    - `location[32]` (MEETING)  
+    - `minutes_before` (REMINDER)  
+    - `person_name[32]` (BIRTHDAY)
+
+**Step 2 — Constructors**  
+- Three overloaded constructors set the shared fields and assign the union field depending on event type.
+
+**Step 3 — Union Initialization**  
+- `EventDetails()` zeroes memory to prevent leftover bytes from previous data.
+
+**Step 4 — Printing**  
+- `print_event()` checks event type and prints the correct union member.
+
+**Step 5 — Demo Output**  
+Creates:  
+- Birthday event  
+- Meeting event  
+- Reminder event  
+
+
+
+---
